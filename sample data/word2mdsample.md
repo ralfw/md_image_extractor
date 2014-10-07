@@ -117,3 +117,5 @@ Niemand muss also agil werden. Aber jedes Projekt sollte mit passender Iteration
 [1] Winston W. Royce, Managing the Development or Large Software Systems, [http://leadinganswers.typepad.com/leading\_answers/files/original\_waterfall\_paper\_winston\_royce.pdf](http://leadinganswers.typepad.com/leading_answers/files/original_waterfall_paper_winston_royce.pdf)
 
 [2] Ralf Westphal, Spinning – A Core Practice for Agile Teams, [http://geekswithblogs.net/theArchitectsNapkin/archive/2013/09/11/spinning-ndash-a-core-practice-for-agile-teams.aspx](http://geekswithblogs.net/theArchitectsNapkin/archive/2013/09/11/spinning-ndash-a-core-practice-for-agile-teams.aspx)
+
+_Converted with https://word-to-markdown.herokuapp.com_
