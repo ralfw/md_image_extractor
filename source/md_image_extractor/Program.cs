@@ -27,50 +27,49 @@ namespace md_image_extractor
 
 		public static void Main (string[] args)
 		{
-			var sourcefilename = Get_filename (args);
-			var foldernames = Create_folders (sourcefilename);
+			var sourcefilepath = Get_filepath (args);
+			var folderpaths = Create_folders (sourcefilepath);
 
-			var markdown = Load_markdown (sourcefilename);
-			Extract_embedded_images_from_markdown((string)foldernames.ImagesFoldername, markdown,
-				cleanedMarkdown => Store_markdown(foldernames.ManuscriptFoldername, sourcefilename, cleanedMarkdown),
+			var markdown = Load_markdown (sourcefilepath);
+			Extract_embedded_images_from_markdown((string)folderpaths.RelativeImagesFolderpath, markdown,
+				cleanedMarkdown => Store_markdown(folderpaths.ManuscriptFolderpath, sourcefilepath, cleanedMarkdown),
 				(imagefilename, dataUri) => {
 					var image = Deserialize_image(dataUri);
-					Store_image(imagefilename, image);
+					Store_image(folderpaths.ImagesFolderpath, imagefilename, image);
 				});
 		}
 
 
-		static string Get_filename(string[] args) {
+		static string Get_filepath(string[] args) {
 			return args [0];
 		}
 
 		static dynamic Create_folders(string sourcefilename) {
-			var manuscriptfoldername = sourcefilename + ".manuscript";
+			var manuscriptfolderpath = sourcefilename + ".manuscript";
 
-			if (Directory.Exists(manuscriptfoldername)) 
-				Directory.Delete(manuscriptfoldername, true);
-			Directory.CreateDirectory (manuscriptfoldername);
+			if (Directory.Exists(manuscriptfolderpath)) 
+				Directory.Delete(manuscriptfolderpath, true);
+			Directory.CreateDirectory (manuscriptfolderpath);
 
-			var imagesfoldername = Path.Combine (manuscriptfoldername, "images");
-			Directory.CreateDirectory (imagesfoldername);
+			var imagesfolderpath = Path.Combine (manuscriptfolderpath, "images");
+			Directory.CreateDirectory (imagesfolderpath);
 
-			Console.WriteLine ("Created manuscript folder: {0}", manuscriptfoldername);
+			Console.WriteLine ("Created manuscript folder: {0}", manuscriptfolderpath);
 
-			return new{ ManuscriptFoldername = manuscriptfoldername, ImagesFoldername = imagesfoldername };
+			return new{ ManuscriptFolderpath = manuscriptfolderpath, ImagesFolderpath = imagesfolderpath, RelativeImagesFolderpath = "images" };
 		}
 
-		static string[] Load_markdown(string filename) {
-			return File.ReadAllLines (filename);
+		static string[] Load_markdown(string filepath) {
+			return File.ReadAllLines (filepath);
 		}
 
-		static void Extract_embedded_images_from_markdown(string imagesfoldername, string[] markdown, 
+		static void Extract_embedded_images_from_markdown(string imagesfolderpath, string[] markdown, 
 														  Action<string[]> onCleanedMarkdown, 
 														  Action<string,string> onImage) {
 			var cleanedMarkdown = new List<string> ();
 			var imagenumber = 0;
+			var imagefilename = "";
 			var dataUri = "";
-
-			Func<string> build_imagefilename = () => Path.Combine (imagesfoldername, "image" + imagenumber.ToString ());
 
 			for (var i = 0; i < markdown.Length; i++) {
 				var line = markdown [i].Trim ();
@@ -78,15 +77,15 @@ namespace md_image_extractor
 				if (string.IsNullOrEmpty (dataUri)) {
 					if (line.StartsWith ("![](data:image")) {
 						dataUri = line.Substring (4);
-						//TODO: stores absolute path; not a good thing
-						line = string.Format ("![{0}]", build_imagefilename());
+						imagefilename = "image" + imagenumber.ToString ();
+						line = string.Format ("![{0}]", Path.Combine(imagesfolderpath, imagefilename));
 						cleanedMarkdown.Add (line);
 					} else
 						cleanedMarkdown.Add (markdown [i]);
 				} else {
 					if (line.EndsWith (")")) {
 						dataUri += line.Substring (0, line.Length - 1);
-						onImage (build_imagefilename(), dataUri);
+						onImage (imagefilename, dataUri);
 						dataUri = "";
 						imagenumber++;
 					} else
@@ -97,20 +96,21 @@ namespace md_image_extractor
 			onCleanedMarkdown (cleanedMarkdown.ToArray());
 		}
 
-		static void Store_markdown(string manuscriptfoldername, string sourcefilename, string[] markdown) {
-			var manuscriptfilename = Path.Combine (manuscriptfoldername, Path.GetFileName (sourcefilename));
-			File.WriteAllLines (manuscriptfilename, markdown);
-			Console.WriteLine ("  Stored manuscript: {0}", Path.GetFileName(manuscriptfilename));
+		static void Store_markdown(string manuscriptfolderpath, string sourcefilepath, string[] markdown) {
+			var manuscriptfilepath = Path.Combine (manuscriptfolderpath, Path.GetFileName (sourcefilepath));
+			File.WriteAllLines (manuscriptfilepath, markdown);
+			Console.WriteLine ("  Stored manuscript: {0}", Path.GetFileName(manuscriptfilepath));
 		}
 
 		static byte[] Deserialize_image(string dataUri) {
-			return new byte[0];
+			Console.WriteLine ("<<<{0}>>>", dataUri);
+			return new byte[]{ 1, 2, 3 };
 		}
 
-		static void Store_image(string imagefilename, byte[] data) {
-			//TODO: really write the bytes
-			File.WriteAllText (imagefilename, imagefilename);
-			Console.WriteLine ("  Extracted image: {0}", Path.GetFileName(imagefilename));
+		static void Store_image(string imagesfolderpath, string imagefilename, byte[] data) {
+			var imagefilepath = Path.Combine (imagesfolderpath, imagefilename);
+			File.WriteAllBytes (imagefilepath, data);
+			Console.WriteLine ("  Extracted image: {0}", imagefilename);
 		}
 	}
 }
