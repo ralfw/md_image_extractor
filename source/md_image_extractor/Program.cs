@@ -23,6 +23,10 @@ namespace md_image_extractor
 		 *  Az0hpWiie32HAAAAAElFTkSuQmCC)
 		 * 
 		 * 
+		 * Sample files:
+		 *   test1.md
+		 *   "../../../../sample data/word2mdsample.md"
+		 * 
 		 */
 
 		public static void Main (string[] args)
@@ -68,29 +72,21 @@ namespace md_image_extractor
 														  Action<string,string> onImage) {
 			var cleanedMarkdown = new List<string> ();
 			var imagenumber = 0;
-			var imagefilename = "";
-			var dataUri = "";
 
 			for (var i = 0; i < markdown.Length; i++) {
 				var line = markdown [i].Trim ();
 
-				if (string.IsNullOrEmpty (dataUri)) {
-					if (line.StartsWith ("![](data:image")) {
-						dataUri = line.Substring (4);
-						imagefilename = "image" + imagenumber.ToString ();
-						line = string.Format ("![]({0})", Path.Combine(imagesfolderpath, imagefilename));
-						cleanedMarkdown.Add (line);
-					} else
-						cleanedMarkdown.Add (markdown [i]);
-				} else {
-					if (line.EndsWith (")")) {
-						dataUri += line.Substring (0, line.Length - 1);
-						onImage (imagefilename, dataUri);
-						dataUri = "";
-						imagenumber++;
-					} else
-						dataUri += line;
-				}
+				if (line.StartsWith ("![](data:image")) {
+					var dataUri = line.Substring (4, line.Length-4-1);
+					var imagefilename = "image" + imagenumber.ToString ();
+					onImage (imagefilename, dataUri);
+
+					line = string.Format ("![]({0})", Path.Combine(imagesfolderpath, imagefilename));
+					cleanedMarkdown.Add (line);
+
+					imagenumber++;
+				} else
+					cleanedMarkdown.Add (markdown [i]);
 			}
 
 			onCleanedMarkdown (cleanedMarkdown.ToArray());
