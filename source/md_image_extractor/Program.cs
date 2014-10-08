@@ -78,7 +78,7 @@ namespace md_image_extractor
 					if (line.StartsWith ("![](data:image")) {
 						dataUri = line.Substring (4);
 						imagefilename = "image" + imagenumber.ToString ();
-						line = string.Format ("![{0}]", Path.Combine(imagesfolderpath, imagefilename));
+						line = string.Format ("![]({0})", Path.Combine(imagesfolderpath, imagefilename));
 						cleanedMarkdown.Add (line);
 					} else
 						cleanedMarkdown.Add (markdown [i]);
@@ -103,8 +103,9 @@ namespace md_image_extractor
 		}
 
 		static byte[] Deserialize_image(string dataUri) {
-			Console.WriteLine ("<<<{0}>>>", dataUri);
-			return new byte[]{ 1, 2, 3 };
+			Console.WriteLine ("  Data: {0}, ca. {1:###,###,###,###,##0} bytes", dataUri.Substring(0, Math.Min(dataUri.Length, 50)), dataUri.Length * 0.66);
+			var i = dataUri.IndexOf (",");
+			return Convert.FromBase64String (dataUri.Substring (i + 1));
 		}
 
 		static void Store_image(string imagesfolderpath, string imagefilename, byte[] data) {
